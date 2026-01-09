@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import SwiftTUI
 
 @main
 struct CoAuthorCommitter: ParsableCommand {
@@ -18,6 +19,6 @@ struct CoAuthorCommitter: ParsableCommand {
         guard let repo = GitRepository(path: directory) else { throw ValidationError("Not a git repository: \(directory)") }
         let contributors = repo.getRecentContributors(lastCommits: numberOfLastCommits)
 
-        contributors.forEach { print($0) }
+        Application(rootView: ContentView(contributors: contributors)).start()
     }
 }

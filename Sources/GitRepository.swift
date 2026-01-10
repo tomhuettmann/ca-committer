@@ -26,14 +26,14 @@ struct GitRepository {
         return process.terminationStatus == 0
     }
 
-    func getRecentContributors(lastCommits: Int) -> [Contributor] {
+    func getRecentContributors(amountOfCommits: Int, skipFirstCommits: Int = 0) -> [Contributor] {
         let process = Process()
         let pipe = Pipe()
 
         process.standardOutput = pipe
         process.standardError = Pipe()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-        process.arguments = ["-C", path, "log", "--format=%an|%ae", "-n", "\(lastCommits)"]
+        process.arguments = ["-C", path, "log", "--format=%an|%ae", "--skip", "\(skipFirstCommits)", "-n", "\(amountOfCommits)"]
 
         try? process.run()
         process.waitUntilExit()

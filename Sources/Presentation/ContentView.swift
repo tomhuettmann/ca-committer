@@ -1,10 +1,12 @@
 import SwiftTUI
 
 struct ContentView: View {
-    let contributors: [Contributor]
+    @State var contributors: [Contributor]
+    @State var amountOfAnalyzedCommits: Int
     let myself: Contributor?
     let commandName: String?
     let version: String
+    let onLoadMoreContributors: () -> ([Contributor], Int)
 
     @State var commitMessageLines: [String] = [""]
     @State var selectedContributors: Set<Contributor> = []
@@ -21,6 +23,14 @@ struct ContentView: View {
             )
             ContributorsView(
                 contributors: contributors,
+                amountOfAnalyzedCommits: amountOfAnalyzedCommits,
+                onLoadMore: {
+                    let (newContributors, totalAnalyzed) = onLoadMoreContributors()
+                    newContributors
+                        .filter { !contributors.contains($0) }
+                        .forEach { contributors.append($0) }
+                    amountOfAnalyzedCommits = totalAnalyzed
+                },
                 selectedContributors: $selectedContributors
             )
             Spacer()

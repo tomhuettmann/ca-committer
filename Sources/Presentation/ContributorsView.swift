@@ -2,13 +2,15 @@ import SwiftTUI
 
 struct ContributorsView: View {
     let contributors: [Contributor]
+    let amountOfAnalyzedCommits: Int
+    let onLoadMore: () -> Void
 
     @Binding var selectedContributors: Set<Contributor>
 
     var body: some View {
         VStack {
             HStack {
-                Text("Recent Contributors")
+                Text("Recent Contributors (analyzed last \(amountOfAnalyzedCommits) commits)")
                 Spacer()
             }
             VStack(alignment: .leading) {
@@ -24,6 +26,9 @@ struct ContributorsView: View {
                             }
                         }
                     )
+                }
+                Button("...") {
+                    onLoadMore()
                 }
             }
             .border()

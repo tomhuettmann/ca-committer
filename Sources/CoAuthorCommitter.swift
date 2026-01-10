@@ -13,17 +13,25 @@ struct CoAuthorCommitter: ParsableCommand {
     @Option(name: .shortAndLong, help: "The git repository directory")
     var directory: String = FileManager.default.currentDirectoryPath
 
-    @Option(name: .shortAndLong, help: "Amount of last commits to scan")
-    var numberOfLastCommits: Int = 100
+    @Option(name: .shortAndLong, help: "Amount of commits to scan at once")
+    var numberOfCommitsPerPagination: Int = 100
 
     func run() throws {
         guard let repo = GitRepository(path: directory) else { throw ValidationError("Not a git repository: \(directory)") }
 
+        var pagination = 0
         Application(rootView: ContentView(
-            contributors: repo.getRecentContributors(lastCommits: numberOfLastCommits),
+            contributors: repo.getRecentContributors(amountOfCommits: numberOfCommitsPerPagination, skipFirstCommits: 0),
+            amountOfAnalyzedCommits: numberOfCommitsPerPagination,
             myself: repo.getMyself(),
             commandName: Self.configuration.commandName,
-            version: Self.configuration.version
+            version: Self.configuration.version,
+            onLoadMoreContributors: {
+                pagination += 1
+                let newContributors = repo.getRecentContributors(amountOfCommits: numberOfCommitsPerPagination, skipFirstCommits: pagination * numberOfCommitsPerPagination)
+                let totalAnalyzed = (pagination + 1) * numberOfCommitsPerPagination
+                return (newContributors, totalAnalyzed)
+            }
         )).start()
     }
 }

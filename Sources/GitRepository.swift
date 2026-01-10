@@ -43,7 +43,8 @@ struct GitRepository {
             let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
         else { return [] }
 
-        var seen = Set<Contributor>()
+        let myself = getMyself()
+        var seen = Set<String>()
         return output
             .components(separatedBy: .newlines)
             .filter { !$0.isEmpty }
@@ -55,10 +56,53 @@ struct GitRepository {
                     let email = parts.last,
                     !name.isEmpty,
                     !email.isEmpty,
-                    !email.contains("noreply.github.com")
+                    !email.contains("noreply.github.com"),
+                    !(myself?.name.lowercased() == name.lowercased() && myself?.email.lowercased() == email.lowercased())
                 else { return nil }
                 return Contributor(name: name, email: email)
             }
-            .filter { seen.insert($0).inserted }
+            .filter { seen.insert("\($0.name.lowercased()),\($0.email.lowercased())").inserted }
+    }
+
+    private func getMyself() -> Contributor? {
+        let process = Process()
+        let pipe = Pipe()
+
+        process.standardOutput = pipe
+        process.standardError = Pipe()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.arguments = ["-C", path, "config", "--get-regexp", "^user\\.(name|email)$"]
+
+        try? process.run()
+        process.waitUntilExit()
+
+        guard
+            process.terminationStatus == 0,
+            let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
+        else { return nil }
+
+        var name: String?
+        var email: String?
+
+        for line in output.components(separatedBy: .newlines) {
+            let parts = line.components(separatedBy: " ")
+            guard parts.count >= 2 else { continue }
+
+            let key = parts[0]
+            let value = parts.dropFirst().joined(separator: " ")
+
+            if key == "user.name" {
+                name = value
+            } else if key == "user.email" {
+                email = value
+            }
+        }
+
+        guard
+            let name, !name.isEmpty,
+            let email, !email.isEmpty
+        else { return nil }
+
+        return Contributor(name: name, email: email)
     }
 }

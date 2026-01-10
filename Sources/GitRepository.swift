@@ -2,13 +2,19 @@ import Foundation
 
 struct GitRepository {
     private let path: String
+    let myself: Contributor?
 
     init?(path: String) {
         self.path = path
-        guard isValidGitRepo(at: path) else { return nil }
+        guard Self.isValidGitRepo(at: path) else { return nil }
+        self.myself = Self.loadMyself(at: path)
     }
 
     private func executeGitCommand(_ arguments: [String]) -> String? {
+        Self.executeGitCommand(at: path, arguments: arguments)
+    }
+
+    private static func executeGitCommand(at path: String, arguments: [String]) -> String? {
         let process = Process()
         let pipe = Pipe()
         
@@ -24,38 +30,12 @@ struct GitRepository {
         return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
     }
 
-    private func isValidGitRepo(at path: String) -> Bool {
-        executeGitCommand(["rev-parse", "--is-inside-work-tree"]) != nil
+    private static func isValidGitRepo(at path: String) -> Bool {
+        executeGitCommand(at: path, arguments: ["rev-parse", "--is-inside-work-tree"]) != nil
     }
 
-    func getRecentContributors(amountOfCommits: Int, skipFirstCommits: Int = 0) -> [Contributor] {
-        guard let output = executeGitCommand(["log", "--format=%an|%ae", "--skip", "\(skipFirstCommits)", "-n", "\(amountOfCommits)"]) else {
-            return []
-        }
-
-        let myself = getMyself()
-        var seen = Set<String>()
-        return output
-            .components(separatedBy: .newlines)
-            .filter { !$0.isEmpty }
-            .compactMap {
-                let parts = $0.components(separatedBy: "|")
-                guard
-                    parts.count == 2,
-                    let name = parts.first,
-                    let email = parts.last,
-                    !name.isEmpty,
-                    !email.isEmpty,
-                    !email.contains("noreply.github.com"),
-                    !(myself?.name.lowercased() == name.lowercased() && myself?.email.lowercased() == email.lowercased())
-                else { return nil }
-                return Contributor(name: name, email: email)
-            }
-            .filter { seen.insert("\($0.name.lowercased()),\($0.email.lowercased())").inserted }
-    }
-
-    func getMyself() -> Contributor? {
-        guard let output = executeGitCommand(["config", "--get-regexp", "^user\\.(name|email)$"]) else {
+    private static func loadMyself(at path: String) -> Contributor? {
+        guard let output = executeGitCommand(at: path, arguments: ["config", "--get-regexp", "^user\\.(name|email)$"]) else {
             return nil
         }
 
@@ -82,5 +62,30 @@ struct GitRepository {
         else { return nil }
 
         return Contributor(name: name, email: email)
+    }
+
+    func getRecentContributors(amountOfCommits: Int, skipFirstCommits: Int = 0) -> [Contributor] {
+        guard let output = executeGitCommand(["log", "--format=%an|%ae", "--skip", "\(skipFirstCommits)", "-n", "\(amountOfCommits)"]) else {
+            return []
+        }
+
+        var seen = Set<String>()
+        return output
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+            .compactMap {
+                let parts = $0.components(separatedBy: "|")
+                guard
+                    parts.count == 2,
+                    let name = parts.first,
+                    let email = parts.last,
+                    !name.isEmpty,
+                    !email.isEmpty,
+                    !email.contains("noreply.github.com"),
+                    !(myself?.name.lowercased() == name.lowercased() && myself?.email.lowercased() == email.lowercased())
+                else { return nil }
+                return Contributor(name: name, email: email)
+            }
+            .filter { seen.insert("\($0.name.lowercased()),\($0.email.lowercased())").inserted }
     }
 }

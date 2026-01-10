@@ -23,7 +23,7 @@ struct CoAuthorCommitter: ParsableCommand {
         Application(rootView: ContentView(
             contributors: repo.getRecentContributors(amountOfCommits: numberOfCommitsPerPagination, skipFirstCommits: 0),
             amountOfAnalyzedCommits: numberOfCommitsPerPagination,
-            myself: repo.getMyself(),
+            myself: repo.myself,
             commandName: Self.configuration.commandName,
             version: Self.configuration.version,
             onLoadMoreContributors: {

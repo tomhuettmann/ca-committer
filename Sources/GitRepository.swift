@@ -64,12 +64,12 @@ struct GitRepository {
         return Contributor(name: name, email: email)
     }
 
-    func getRecentContributors(amountOfCommits: Int, skipFirstCommits: Int = 0) -> [Contributor] {
+    func getRecentContributors(amountOfCommits: Int, skipFirstCommits: Int = 0, excluding: Set<Contributor> = []) -> [Contributor] {
         guard let output = executeGitCommand(["log", "--format=%an|%ae", "--skip", "\(skipFirstCommits)", "-n", "\(amountOfCommits)"]) else {
             return []
         }
 
-        var seen = Set<Contributor>()
+        var seen = excluding
         return output
             .components(separatedBy: .newlines)
             .filter { !$0.isEmpty }

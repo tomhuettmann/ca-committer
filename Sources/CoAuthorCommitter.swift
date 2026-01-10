@@ -20,17 +20,26 @@ struct CoAuthorCommitter: ParsableCommand {
         guard let repo = GitRepository(path: directory) else { throw ValidationError("Not a git repository: \(directory)") }
 
         var pagination = 0
+        var allContributors: [Contributor] = repo.getRecentContributors(amountOfCommits: numberOfCommitsPerPagination, skipFirstCommits: 0)
+        var seenContributors = Set(allContributors)
+        
         Application(rootView: ContentView(
-            contributors: repo.getRecentContributors(amountOfCommits: numberOfCommitsPerPagination, skipFirstCommits: 0),
+            contributors: allContributors,
             amountOfAnalyzedCommits: numberOfCommitsPerPagination,
             myself: repo.myself,
             commandName: Self.configuration.commandName,
             version: Self.configuration.version,
             onLoadMoreContributors: {
                 pagination += 1
-                let newContributors = repo.getRecentContributors(amountOfCommits: numberOfCommitsPerPagination, skipFirstCommits: pagination * numberOfCommitsPerPagination)
+                let newContributors = repo.getRecentContributors(
+                    amountOfCommits: numberOfCommitsPerPagination,
+                    skipFirstCommits: pagination * numberOfCommitsPerPagination,
+                    excluding: seenContributors
+                )
+                allContributors.append(contentsOf: newContributors)
+                seenContributors.formUnion(newContributors)
                 let totalAnalyzed = (pagination + 1) * numberOfCommitsPerPagination
-                return (newContributors, totalAnalyzed)
+                return (allContributors, totalAnalyzed)
             }
         )).start()
     }

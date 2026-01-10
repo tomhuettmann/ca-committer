@@ -25,10 +25,8 @@ struct ContentView: View {
                 contributors: contributors,
                 amountOfAnalyzedCommits: amountOfAnalyzedCommits,
                 onLoadMore: {
-                    let (newContributors, totalAnalyzed) = onLoadMoreContributors()
-                    newContributors
-                        .filter { !contributors.contains($0) }
-                        .forEach { contributors.append($0) }
+                    let (allContributors, totalAnalyzed) = onLoadMoreContributors()
+                    contributors = allContributors
                     amountOfAnalyzedCommits = totalAnalyzed
                 },
                 selectedContributors: $selectedContributors

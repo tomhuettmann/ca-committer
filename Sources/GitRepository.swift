@@ -69,7 +69,7 @@ struct GitRepository {
             return []
         }
 
-        var seen = Set<String>()
+        var seen = Set<Contributor>()
         return output
             .components(separatedBy: .newlines)
             .filter { !$0.isEmpty }
@@ -81,11 +81,10 @@ struct GitRepository {
                     let email = parts.last,
                     !name.isEmpty,
                     !email.isEmpty,
-                    !email.contains("noreply.github.com"),
-                    !(myself?.name.lowercased() == name.lowercased() && myself?.email.lowercased() == email.lowercased())
+                    !email.contains("noreply.github.com")
                 else { return nil }
                 return Contributor(name: name, email: email)
             }
-            .filter { seen.insert("\($0.name.lowercased()),\($0.email.lowercased())").inserted }
+            .filter { $0 != myself && seen.insert($0).inserted }
     }
 }

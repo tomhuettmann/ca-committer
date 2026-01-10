@@ -8,35 +8,30 @@ struct GitRepository {
         guard isValidGitRepo(at: path) else { return nil }
     }
 
-    private func isValidGitRepo(at path: String) -> Bool {
-        let process = Process()
-        process.standardOutput = Pipe()
-        process.standardError = Pipe()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-        process.arguments = ["-C", path, "rev-parse", "--is-inside-work-tree"]
-
-        try? process.run()
-        process.waitUntilExit()
-
-        return process.terminationStatus == 0
-    }
-
-    func getRecentContributors(amountOfCommits: Int, skipFirstCommits: Int = 0) -> [Contributor] {
+    private func executeGitCommand(_ arguments: [String]) -> String? {
         let process = Process()
         let pipe = Pipe()
-
+        
         process.standardOutput = pipe
         process.standardError = Pipe()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-        process.arguments = ["-C", path, "log", "--format=%an|%ae", "--skip", "\(skipFirstCommits)", "-n", "\(amountOfCommits)"]
-
+        process.arguments = ["-C", path] + arguments
+        
         try? process.run()
         process.waitUntilExit()
+        
+        guard process.terminationStatus == 0 else { return nil }
+        return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
+    }
 
-        guard
-            process.terminationStatus == 0,
-            let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
-        else { return [] }
+    private func isValidGitRepo(at path: String) -> Bool {
+        executeGitCommand(["rev-parse", "--is-inside-work-tree"]) != nil
+    }
+
+    func getRecentContributors(amountOfCommits: Int, skipFirstCommits: Int = 0) -> [Contributor] {
+        guard let output = executeGitCommand(["log", "--format=%an|%ae", "--skip", "\(skipFirstCommits)", "-n", "\(amountOfCommits)"]) else {
+            return []
+        }
 
         let myself = getMyself()
         var seen = Set<String>()
@@ -60,21 +55,9 @@ struct GitRepository {
     }
 
     func getMyself() -> Contributor? {
-        let process = Process()
-        let pipe = Pipe()
-
-        process.standardOutput = pipe
-        process.standardError = Pipe()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-        process.arguments = ["-C", path, "config", "--get-regexp", "^user\\.(name|email)$"]
-
-        try? process.run()
-        process.waitUntilExit()
-
-        guard
-            process.terminationStatus == 0,
-            let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
-        else { return nil }
+        guard let output = executeGitCommand(["config", "--get-regexp", "^user\\.(name|email)$"]) else {
+            return nil
+        }
 
         var name: String?
         var email: String?

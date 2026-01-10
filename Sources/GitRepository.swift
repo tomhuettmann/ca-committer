@@ -1,10 +1,5 @@
 import Foundation
 
-struct Contributor: Hashable {
-    let name: String
-    let email: String
-}
-
 struct GitRepository {
     private let path: String
 

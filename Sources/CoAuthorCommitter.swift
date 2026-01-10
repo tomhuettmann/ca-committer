@@ -6,7 +6,8 @@ import SwiftTUI
 struct CoAuthorCommitter: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "ca-committer",
-        abstract: "Git commit with co-authors support"
+        abstract: "Git commit with co-authors support",
+        version: "1.0.0"
     )
 
     @Option(name: .shortAndLong, help: "The git repository directory")
@@ -17,8 +18,12 @@ struct CoAuthorCommitter: ParsableCommand {
 
     func run() throws {
         guard let repo = GitRepository(path: directory) else { throw ValidationError("Not a git repository: \(directory)") }
-        let contributors = repo.getRecentContributors(lastCommits: numberOfLastCommits)
 
-        Application(rootView: ContentView(contributors: contributors)).start()
+        Application(rootView: ContentView(
+            contributors: repo.getRecentContributors(lastCommits: numberOfLastCommits),
+            myself: repo.getMyself(),
+            commandName: Self.configuration.commandName,
+            version: Self.configuration.version
+        )).start()
     }
 }

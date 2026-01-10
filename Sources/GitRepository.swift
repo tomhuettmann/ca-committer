@@ -64,7 +64,7 @@ struct GitRepository {
             .filter { seen.insert("\($0.name.lowercased()),\($0.email.lowercased())").inserted }
     }
 
-    private func getMyself() -> Contributor? {
+    func getMyself() -> Contributor? {
         let process = Process()
         let pipe = Pipe()
 

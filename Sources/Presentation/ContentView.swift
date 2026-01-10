@@ -1,7 +1,11 @@
 import SwiftTUI
 
 struct ContentView: View {
-    @State var contributors: [Contributor]
+    let contributors: [Contributor]
+    let myself: Contributor?
+    let commandName: String?
+    let version: String
+
     @State var commitMessageLines: [String] = [""]
     @State var selectedContributors: Set<Contributor> = []
 
@@ -19,6 +23,8 @@ struct ContentView: View {
                 contributors: contributors,
                 selectedContributors: $selectedContributors
             )
+            Spacer()
+            FooterView(myself: myself, commandName: commandName, version: version)
         }
     }
 }

@@ -2,6 +2,7 @@ import SwiftTUI
 
 struct CommitView: View {
     let onSubmit: () -> Void
+
     @Binding var lines: [String]
 
     var body: some View {
@@ -35,7 +36,6 @@ struct CommitView: View {
                     }
                     Spacer()
                 }
-                .frame(maxWidth: .infinity)
                 .border(lines[index].isEmpty ? .blue : .default)
             }
         }

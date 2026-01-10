@@ -2,6 +2,7 @@ import SwiftTUI
 
 struct ContributorsView: View {
     let contributors: [Contributor]
+
     @Binding var selectedContributors: Set<Contributor>
 
     var body: some View {
@@ -25,7 +26,6 @@ struct ContributorsView: View {
                     )
                 }
             }
-            .frame(maxWidth: .infinity)
             .border()
         }
     }

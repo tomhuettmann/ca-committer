@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "ca-committer",
+    name: "cac",
     platforms: [
         .macOS(.v14),
     ],
@@ -13,7 +13,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "ca-committer",
+            name: "cac",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "SwiftTUI", package: "SwiftTUI"),

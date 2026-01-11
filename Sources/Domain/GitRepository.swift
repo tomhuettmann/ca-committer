@@ -5,7 +5,7 @@ struct GitRepository {
         static let gitExecutablePath = "/usr/bin/git"
         static let noReplyEmailDomain = "noreply.github.com"
     }
-    
+
     private let path: String
     let myself: Contributor?
     let amountOfCommits: Int?
@@ -13,8 +13,8 @@ struct GitRepository {
     init?(path: String) {
         self.path = path
         guard Self.isValidGitRepo(at: path) else { return nil }
-        self.myself = Self.loadMyself(at: path)
-        self.amountOfCommits = Self.countCommits(at: path)
+        myself = Self.loadMyself(at: path)
+        amountOfCommits = Self.countCommits(at: path)
     }
 
     private func executeGitCommand(_ arguments: [String]) -> (Bool, String?) {
@@ -24,24 +24,24 @@ struct GitRepository {
     private static func executeGitCommand(at path: String, arguments: [String]) -> (Bool, String?) {
         let process = Process()
         let pipe = Pipe()
-        
+
         process.standardOutput = pipe
         process.standardError = pipe
         process.executableURL = URL(fileURLWithPath: Constants.gitExecutablePath)
         process.arguments = ["-C", path] + arguments
-        
+
         try? process.run()
         process.waitUntilExit()
 
         guard let rawOutput = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) else {
             return (false, nil)
         }
-        
+
         let normalizedOutput = rawOutput
             .replacingOccurrences(of: "\t", with: "    ")
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
-        
+
         return (process.terminationStatus == 0, normalizedOutput)
     }
 
@@ -110,7 +110,7 @@ struct GitRepository {
 
     func commit(messageLines: [String], coAuthors: [Contributor]) -> (Bool, String?) {
         var fullMessage = messageLines.joined(separator: "\n")
-        
+
         if !coAuthors.isEmpty {
             fullMessage += "\n"
             for contributor in coAuthors {

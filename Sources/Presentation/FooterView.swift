@@ -6,20 +6,24 @@ struct FooterView: View {
     let version: String
 
     var body: some View {
-        HStack(alignment: .bottom) {
-            VStack {
+        VStack {
+            HStack {
                 Text("Author")
+                Spacer()
+                Text("Ctrl+C to exit")
+            }
+            HStack {
                 if let myself {
                     Text("\(myself.name) (\(myself.email))")
                 } else {
                     Text("Unknown")
                 }
+                Spacer()
+                if let commandName {
+                    Text(commandName)
+                }
+                Text(version)
             }
-            Spacer()
-            if let commandName {
-                Text(commandName)
-            }
-            Text(version)
         }
     }
 }

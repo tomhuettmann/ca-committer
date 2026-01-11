@@ -1,5 +1,5 @@
-import SwiftTUI
 import Darwin
+import SwiftTUI
 
 struct ContentView: View {
     @ObservedObject var service: ContributorService

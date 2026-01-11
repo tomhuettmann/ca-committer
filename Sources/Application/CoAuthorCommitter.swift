@@ -22,7 +22,7 @@ struct CoAuthorCommitter: ParsableCommand {
         }
 
         let service = ContributorService(repository: repo, pageSize: numberOfCommitsPerPagination)
-        
+
         Application(rootView: ContentView(
             service: service,
             repository: repo,

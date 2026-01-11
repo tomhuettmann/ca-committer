@@ -25,6 +25,7 @@ struct CoAuthorCommitter: ParsableCommand {
         
         Application(rootView: ContentView(
             service: service,
+            repository: repo,
             myself: repo.myself,
             commandName: Self.configuration.commandName,
             version: Self.configuration.version

@@ -1,7 +1,9 @@
 import SwiftTUI
+import Darwin
 
 struct ContentView: View {
     @ObservedObject var service: ContributorService
+    let repository: GitRepository
     let myself: Contributor?
     let commandName: String?
     let version: String
@@ -13,9 +15,11 @@ struct ContentView: View {
         VStack {
             CommitView(
                 onSubmit: {
-                    print()
-                    print("message: \(commitMessageLines)")
-                    print("contributors: \(selectedContributors)")
+                    let coAuthors = Array(selectedContributors)
+                    let success = repository.commit(messageLines: commitMessageLines, coAuthors: coAuthors)
+                    if success {
+                        exit(0)
+                    }
                 },
                 lines: $commitMessageLines
             )

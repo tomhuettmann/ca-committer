@@ -101,4 +101,18 @@ struct GitRepository {
             }
             .filter { $0 != myself && seen.insert($0).inserted }
     }
+
+    func commit(messageLines: [String], coAuthors: [Contributor]) -> Bool {
+        var fullMessage = messageLines.joined(separator: "\n")
+        
+        if !coAuthors.isEmpty {
+            fullMessage += "\n"
+            for contributor in coAuthors {
+                fullMessage += "\nCo-authored-by: \(contributor.name) <\(contributor.email)>"
+            }
+        }
+        
+        let result = executeGitCommand(["commit", "-m", fullMessage])
+        return result != nil
+    }
 }

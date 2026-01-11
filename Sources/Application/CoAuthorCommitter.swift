@@ -5,7 +5,7 @@ import SwiftTUI
 @main
 struct CoAuthorCommitter: ParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "ca-committer",
+        commandName: "cac",
         abstract: "Git commit with co-authors support",
         version: "1.0.0"
     )

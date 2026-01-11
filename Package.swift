@@ -13,7 +13,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "ca-committer",
+            name: "cac",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "SwiftTUI", package: "SwiftTUI"),

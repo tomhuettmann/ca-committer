@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    name: Build and Release
+    runs-on: macos-14
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '6.2'
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build universal binary
+        run: |
+          # Build for both architectures
+          swift build -c release --arch arm64 --arch x86_64
+          
+          # Create universal binary
+          mkdir -p release
+          cp .build/apple/Products/Release/cac release/cac
+          
+          # Verify it's universal
+          lipo -info release/cac
+          
+          # Make executable
+          chmod +x release/cac
+
+      - name: Create tarball
+        run: |
+          cd release
+          tar -czf cac-${{ steps.version.outputs.VERSION }}-macos-universal.tar.gz cac
+          shasum -a 256 cac-${{ steps.version.outputs.VERSION }}-macos-universal.tar.gz > cac-${{ steps.version.outputs.VERSION }}-macos-universal.tar.gz.sha256
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/cac
+            release/cac-${{ steps.version.outputs.VERSION }}-macos-universal.tar.gz
+            release/cac-${{ steps.version.outputs.VERSION }}-macos-universal.tar.gz.sha256
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -9,7 +9,6 @@ struct ContributorView: View {
         HStack {
             Button(selected ? "[X]" : "[ ]") { onToggle() }
             Text("\(contributor.name) (\(contributor.email))")
-            Spacer()
         }
     }
 }

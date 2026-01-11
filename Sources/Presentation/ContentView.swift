@@ -22,6 +22,7 @@ struct ContentView: View {
             ContributorsView(
                 contributors: service.contributors,
                 amountOfAnalyzedCommits: service.totalCommitsAnalyzed,
+                analyzedAll: service.analyzedAll,
                 onLoadMore: service.loadMore,
                 selectedContributors: $selectedContributors
             )

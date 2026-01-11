@@ -9,7 +9,11 @@ class ContributorService: ObservableObject {
     private var seenContributors: Set<Contributor> = []
     
     var totalCommitsAnalyzed: Int { (currentPage + 1) * pageSize }
-    
+    var analyzedAll: Bool {
+        guard let amountOfCommits = repository.amountOfCommits else { return false }
+        return totalCommitsAnalyzed >= amountOfCommits
+    }
+
     init(repository: GitRepository, pageSize: Int) {
         self.repository = repository
         self.pageSize = pageSize

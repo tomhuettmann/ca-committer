@@ -8,11 +8,13 @@ struct GitRepository {
     
     private let path: String
     let myself: Contributor?
+    let amountOfCommits: Int?
 
     init?(path: String) {
         self.path = path
         guard Self.isValidGitRepo(at: path) else { return nil }
         self.myself = Self.loadMyself(at: path)
+        self.amountOfCommits = Self.countCommits(at: path)
     }
 
     private func executeGitCommand(_ arguments: [String]) -> String? {
@@ -67,6 +69,13 @@ struct GitRepository {
         else { return nil }
 
         return Contributor(name: name, email: email)
+    }
+
+    private static func countCommits(at path: String) -> Int? {
+        guard let output = executeGitCommand(at: path, arguments: ["rev-list", "--count", "HEAD"]) else {
+            return nil
+        }
+        return Int(output.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
     func getRecentContributors(amountOfCommits: Int, skipFirstCommits: Int = 0, excluding: Set<Contributor> = []) -> [Contributor] {

@@ -3,6 +3,7 @@ import SwiftTUI
 struct ContributorsView: View {
     let contributors: [Contributor]
     let amountOfAnalyzedCommits: Int
+    let analyzedAll: Bool
     let onLoadMore: () -> Void
 
     @Binding var selectedContributors: Set<Contributor>
@@ -10,26 +11,35 @@ struct ContributorsView: View {
     var body: some View {
         VStack {
             HStack {
-                Text("Recent Contributors (analyzed last \(amountOfAnalyzedCommits) commits)")
+                if analyzedAll {
+                    Text("Recent Contributors (analyzed whole repository)")
+                } else {
+                    Text("Recent Contributors (analyzed last \(amountOfAnalyzedCommits) commits)")
+                }
                 Spacer()
             }
-            VStack(alignment: .leading) {
-                ForEach(contributors, id: \.self) { contributor in
-                    ContributorView(
-                        contributor: contributor,
-                        selected: selectedContributors.contains(contributor),
-                        onToggle: {
-                            if selectedContributors.contains(contributor) {
-                                selectedContributors.remove(contributor)
-                            } else {
-                                selectedContributors.insert(contributor)
+            HStack {
+                VStack(alignment: .leading) {
+                    ForEach(contributors, id: \.self) { contributor in
+                        ContributorView(
+                            contributor: contributor,
+                            selected: selectedContributors.contains(contributor),
+                            onToggle: {
+                                if selectedContributors.contains(contributor) {
+                                    selectedContributors.remove(contributor)
+                                } else {
+                                    selectedContributors.insert(contributor)
+                                }
                             }
+                        )
+                    }
+                    if !analyzedAll {
+                        Button("...") {
+                            onLoadMore()
                         }
-                    )
+                    }
                 }
-                Button("...") {
-                    onLoadMore()
-                }
+                Spacer()
             }
             .border()
         }

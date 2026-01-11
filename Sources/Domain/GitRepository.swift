@@ -17,34 +17,41 @@ struct GitRepository {
         self.amountOfCommits = Self.countCommits(at: path)
     }
 
-    private func executeGitCommand(_ arguments: [String]) -> String? {
+    private func executeGitCommand(_ arguments: [String]) -> (Bool, String?) {
         Self.executeGitCommand(at: path, arguments: arguments)
     }
 
-    private static func executeGitCommand(at path: String, arguments: [String]) -> String? {
+    private static func executeGitCommand(at path: String, arguments: [String]) -> (Bool, String?) {
         let process = Process()
         let pipe = Pipe()
         
         process.standardOutput = pipe
-        process.standardError = Pipe()
+        process.standardError = pipe
         process.executableURL = URL(fileURLWithPath: Constants.gitExecutablePath)
         process.arguments = ["-C", path] + arguments
         
         try? process.run()
         process.waitUntilExit()
+
+        guard let rawOutput = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) else {
+            return (false, nil)
+        }
         
-        guard process.terminationStatus == 0 else { return nil }
-        return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
+        let normalizedOutput = rawOutput
+            .replacingOccurrences(of: "\t", with: "    ")
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+        
+        return (process.terminationStatus == 0, normalizedOutput)
     }
 
     private static func isValidGitRepo(at path: String) -> Bool {
-        executeGitCommand(at: path, arguments: ["rev-parse", "--is-inside-work-tree"]) != nil
+        executeGitCommand(at: path, arguments: ["rev-parse", "--is-inside-work-tree"]).0
     }
 
     private static func loadMyself(at path: String) -> Contributor? {
-        guard let output = executeGitCommand(at: path, arguments: ["config", "--get-regexp", "^user\\.(name|email)$"]) else {
-            return nil
-        }
+        let (success, output) = executeGitCommand(at: path, arguments: ["config", "--get-regexp", "^user\\.(name|email)$"])
+        guard success, let output else { return nil }
 
         var name: String?
         var email: String?
@@ -72,16 +79,15 @@ struct GitRepository {
     }
 
     private static func countCommits(at path: String) -> Int? {
-        guard let output = executeGitCommand(at: path, arguments: ["rev-list", "--count", "HEAD"]) else {
-            return nil
-        }
+        let (success, output) = executeGitCommand(at: path, arguments: ["rev-list", "--count", "HEAD"])
+        guard success, let output else { return nil }
+
         return Int(output.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
     func getRecentContributors(amountOfCommits: Int, skipFirstCommits: Int = 0, excluding: Set<Contributor> = []) -> [Contributor] {
-        guard let output = executeGitCommand(["log", "--format=%an|%ae", "--skip", "\(skipFirstCommits)", "-n", "\(amountOfCommits)"]) else {
-            return []
-        }
+        let (success, output) = executeGitCommand(["log", "--format=%an|%ae", "--skip", "\(skipFirstCommits)", "-n", "\(amountOfCommits)"])
+        guard success, let output else { return [] }
 
         var seen = excluding
         return output
@@ -102,7 +108,7 @@ struct GitRepository {
             .filter { $0 != myself && seen.insert($0).inserted }
     }
 
-    func commit(messageLines: [String], coAuthors: [Contributor]) -> Bool {
+    func commit(messageLines: [String], coAuthors: [Contributor]) -> (Bool, String?) {
         var fullMessage = messageLines.joined(separator: "\n")
         
         if !coAuthors.isEmpty {
@@ -111,8 +117,7 @@ struct GitRepository {
                 fullMessage += "\nCo-authored-by: \(contributor.name) <\(contributor.email)>"
             }
         }
-        
-        let result = executeGitCommand(["commit", "-m", fullMessage])
-        return result != nil
+
+        return executeGitCommand(["commit", "-m", fullMessage])
     }
 }

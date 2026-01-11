@@ -1,6 +1,11 @@
 import Foundation
 
 struct GitRepository {
+    private enum Constants {
+        static let gitExecutablePath = "/usr/bin/git"
+        static let noReplyEmailDomain = "noreply.github.com"
+    }
+    
     private let path: String
     let myself: Contributor?
 
@@ -20,7 +25,7 @@ struct GitRepository {
         
         process.standardOutput = pipe
         process.standardError = Pipe()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.executableURL = URL(fileURLWithPath: Constants.gitExecutablePath)
         process.arguments = ["-C", path] + arguments
         
         try? process.run()
@@ -81,7 +86,7 @@ struct GitRepository {
                     let email = parts.last,
                     !name.isEmpty,
                     !email.isEmpty,
-                    !email.contains("noreply.github.com")
+                    !email.contains(Constants.noReplyEmailDomain)
                 else { return nil }
                 return Contributor(name: name, email: email)
             }
